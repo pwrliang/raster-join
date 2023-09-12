@@ -3,6 +3,7 @@ import re
 def readResults(filename):
     f = open(filename , 'r')
     #Result: ptsSize, polySize, function, noPtPasses, noConstraints, executeTime, ptMemTime, ptRenderTime, polyMemTime, polyRenderTime, setupTime, triangulationTime, polyIndexTime, backendQueryTime, accuracy 
+    # 226258216		16384	0	1	0	26816	0	26176	2	5	4	51	0	0	100
     converter = (int, int, int, int, int, int, int, int, int, int, int, int, int, int)
     converter_accuracy = (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int)
     results = []

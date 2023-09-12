@@ -1,20 +1,17 @@
 #include <GL/glew.h>
 #include <QOpenGLVertexArrayObject>
 #include <QElapsedTimer>
-
 #include "HybridJoin.hpp"
 #include "GLHandler.hpp"
 #include "Utils.h"
 #include "GLData.hpp"
 
-HybridJoin::HybridJoin(GLHandler *handler): GLFunction(handler)
-{
+HybridJoin::HybridJoin(GLHandler *handler) : GLFunction(handler) {
     gvao = 0;
     indexCreated = false;
 }
 
-HybridJoin::~HybridJoin(){ }
-
+HybridJoin::~HybridJoin() {}
 
 
 void HybridJoin::initGL() {
@@ -31,7 +28,7 @@ void HybridJoin::initGL() {
     outlineShader->addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/line-simple.frag");
     outlineShader->link();
 
-    if(this->gvao == 0) {
+    if (this->gvao == 0) {
         glGenVertexArrays(1, &this->gvao);
     }
 
@@ -41,14 +38,14 @@ void HybridJoin::initGL() {
     polyBuffer = new GLBuffer();
     polyBuffer->generate(GL_ARRAY_BUFFER);
 
-    pointsFbo.create(0,GL_RGBA32I,0);
+    pointsFbo.create(0, GL_RGBA32I, 0);
 
     pointsShader.reset(new QOpenGLShaderProgram());
     pointsShader->addShaderFromSourceFile(QOpenGLShader::Compute, ":shaders/hybrid.glsl");
     pointsShader->link();
 
     pbuffer = new GLBuffer();
-    pbuffer->generate(GL_SHADER_STORAGE_BUFFER,!(handler->inmem));
+    pbuffer->generate(GL_SHADER_STORAGE_BUFFER, !(handler->inmem));
 
     glGenQueries(1, &query);
 
@@ -60,16 +57,16 @@ void HybridJoin::initGL() {
 void HybridJoin::updateBuffers() {
     GLFunction::updateBuffers();
     Bound bound = this->handler->dataHandler->getPolyHandler()->getBounds();
-    this->mvp = getMVP(bound.leftBottom,bound.rightTop);
+    this->mvp = getMVP(bound.leftBottom, bound.rightTop);
 //    int fboSize = MAX_FBO_SIZE;
     int fboSize = 8192;
-    size = getResolution(bound.leftBottom,bound.rightTop,fboSize);
-    if (this->polyFbo.isNull() || this->polyFbo->size()!= size) {
+    size = getResolution(bound.leftBottom, bound.rightTop, fboSize);
+    if (this->polyFbo.isNull() || this->polyFbo->size() != size) {
         this->polyFbo.clear();
-        this->polyFbo.reset(new FBOObject(size,FBOObject::NoAttachment,GL_TEXTURE_2D,GL_RGBA32F));
+        this->polyFbo.reset(new FBOObject(size, FBOObject::NoAttachment, GL_TEXTURE_2D, GL_RGBA32F));
 
         this->outlineFbo.clear();
-        this->outlineFbo.reset(new FBOObject(size,FBOObject::NoAttachment,GL_TEXTURE_2D,GL_RGBA32F));
+        this->outlineFbo.reset(new FBOObject(size, FBOObject::NoAttachment, GL_TEXTURE_2D, GL_RGBA32F));
         this->pointsFbo.setData(size.width() * size.height() * sizeof(int) * 4, GL_RGBA32I, NULL);
     }
 }
@@ -77,7 +74,7 @@ void HybridJoin::updateBuffers() {
 inline GLuint64 getTime(GLuint query) {
     int done = 0;
     while (!done) {
-        glGetQueryObjectiv(query,GL_QUERY_RESULT_AVAILABLE,&done);
+        glGetQueryObjectiv(query, GL_QUERY_RESULT_AVAILABLE, &done);
     }
     GLuint64 elapsed_time;
     glGetQueryObjectui64v(query, GL_QUERY_RESULT, &elapsed_time);
@@ -87,26 +84,26 @@ inline GLuint64 getTime(GLuint query) {
 void HybridJoin::glJoin() {
     int localSize = 1024;
 
-    pbuffer->resize(GL_DYNAMIC_DRAW,memLeft);
+    pbuffer->resize(GL_DYNAMIC_DRAW, memLeft);
 
     // setup rendering passes
     Bound bound = this->handler->dataHandler->getPolyHandler()->getBounds();
     uint32_t result_size = ptsSize;
-    GLsizeiptr  passOffset = 0;
+    GLsizeiptr passOffset = 0;
 
-    for(int i = 0; i < noPtPasses; i++) {
+    for (int i = 0; i < noPtPasses; i++) {
         GLsizeiptr offset = 0;
         QVector<int> offsets;
-        for(int j = 0;j < inputData.size();j ++) {
+        for (int j = 0; j < inputData.size(); j++) {
             offsets << (offset / sizeof(float));
             GLsizeiptr dataSize = tsize * attribSizes[j] * sizeof(float);
-            GLsizeiptr  dataOffset = passOffset * attribSizes[j] * sizeof(float);
-            this->pbuffer->setData(GL_DYNAMIC_DRAW,inputData[j]->data() + dataOffset,dataSize,offset);
+            GLsizeiptr dataOffset = passOffset * attribSizes[j] * sizeof(float);
+            this->pbuffer->setData(GL_DYNAMIC_DRAW, inputData[j]->data() + dataOffset, dataSize, offset);
             offset += dataSize;
         }
         int offsetSize = offsets.size() * sizeof(int);
-        buffer->resize(GL_DYNAMIC_DRAW,offsetSize);
-        buffer->setData(GL_DYNAMIC_DRAW,offsets.data(),offsetSize);
+        buffer->resize(GL_DYNAMIC_DRAW, offsetSize);
+        buffer->setData(GL_DYNAMIC_DRAW, offsets.data(), offsetSize);
 
         pointsShader->bind();
 
@@ -127,8 +124,8 @@ void HybridJoin::glJoin() {
         pointsShader->setUniformValue("aggrId", aggrId);
         pointsShader->setUniformValue("attrCt", attrCt);
         pointsShader->setUniformValue("queryCt", noConstraints);
-        pointsShader->setUniformValue("noPoints", (int)tsize);
-        pointsShader->setUniformValue("offset",polySize);
+        pointsShader->setUniformValue("noPoints", (int) tsize);
+        pointsShader->setUniformValue("offset", polySize);
 
         this->pbuffer->bind();
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, pbuffer->id);
@@ -136,9 +133,10 @@ void HybridJoin::glJoin() {
         this->buffer->bind();
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, buffer->id);
 
-        int xs = this->handler->presx; int ys = this->handler->presx;
+        int xs = this->handler->presx;
+        int ys = this->handler->presx;
         QPointF diff = bound.rightTop - bound.leftBottom;
-        glUniform2i(pointsShader->uniformLocation("res"),xs,ys);
+        glUniform2i(pointsShader->uniformLocation("res"), xs, ys);
         glUniform2f(pointsShader->uniformLocation("leftBottom"), bound.leftBottom.x(), bound.leftBottom.y());
         glUniform2f(pointsShader->uniformLocation("cellSize"), diff.x() / xs, diff.y() / ys);
 
@@ -161,32 +159,32 @@ void HybridJoin::glJoin() {
 
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, this->outlineFbo->texture());
-        glUniform1i(this->pointsShader->uniformLocation("outlineTex"),4);
+        glUniform1i(this->pointsShader->uniformLocation("outlineTex"), 4);
 
         glBindBufferARB(GL_SHADER_STORAGE_BUFFER, texBuf.bufId);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, texBuf.bufId);
 
-        glUniform2i(pointsShader->uniformLocation("fboRes"),outlineFbo->width(),outlineFbo->height());
+        glUniform2i(pointsShader->uniformLocation("fboRes"), outlineFbo->width(), outlineFbo->height());
         glUniform2f(pointsShader->uniformLocation("rightTop"), bound.rightTop.x(), bound.rightTop.y());
 
         glBindBufferARB(GL_SHADER_STORAGE_BUFFER, this->pointsFbo.bufId);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, this->pointsFbo.bufId);
 
-    #ifdef PROFILE_GL
-        glBeginQuery(GL_TIME_ELAPSED,query);
-    #endif
+#ifdef PROFILE_GL
+        glBeginQuery(GL_TIME_ELAPSED, query);
+#endif
 
         int workSize = int(std::ceil(float(tsize) / localSize));
-        glDispatchCompute(workSize,1,1);
+        glDispatchCompute(workSize, 1, 1);
 
-    #ifdef PROFILE_GL
+#ifdef PROFILE_GL
         glEndQuery(GL_TIME_ELAPSED);
         glFinish();
         GLuint64 elapsed_time = getTime(query);
         this->ptRenderTime.last() += (elapsed_time / 1000000);
-    #endif
+#endif
 
-        passOffset+=tsize;
+        passOffset += tsize;
         result_size -= tsize;
         tsize = (result_size > gpu_size) ? gpu_size : result_size;
     }
@@ -195,8 +193,8 @@ void HybridJoin::glJoin() {
 }
 
 void HybridJoin::drawOutline() {
-    DataHandler * data = this->handler->dataHandler;
-    PolyHandler * poly = data->getPolyHandler();
+    DataHandler *data = this->handler->dataHandler;
+    PolyHandler *poly = data->getPolyHandler();
 
 #ifdef PROFILE_GL
     QElapsedTimer timer;
@@ -204,24 +202,25 @@ void HybridJoin::drawOutline() {
 #endif
 
     this->outlineFbo->bind();
-    glClearColor(0,0,0,0);
+    glClearColor(0, 0, 0, 0);
+    CHECK_GL_ERROR;
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE,GL_ONE);
+    glBlendFunc(GL_ONE, GL_ONE);
 
     QVector<float> outline = poly->getPolyOutline();
     int psize = outline.size() * sizeof(float);
-    float* pts = (float*)outline.data();
+    float *pts = (float *) outline.data();
 
     int maxLines = memLeft / (2 * 2 * sizeof(float));
     int noLines = psize / (2 * 2 * sizeof(float));
-    noLinePasses = (int)ceil((noLines+0.0)/(maxLines+0.0));
+    noLinePasses = (int) ceil((noLines + 0.0) / (maxLines + 0.0));
     this->noLines = noLines;
 
     this->outlineShader->bind();
     outlineShader->setUniformValue("mvpMatrix", mvp);
-    glUniform2i(outlineShader->uniformLocation("res"),outlineFbo->width(),outlineFbo->height());
+    glUniform2i(outlineShader->uniformLocation("res"), outlineFbo->width(), outlineFbo->height());
 
 #ifdef PROFILE_GL
     glFinish();
@@ -230,20 +229,20 @@ void HybridJoin::drawOutline() {
 #endif
 
     int passOffset = 0;
-    for(uint32_t i = 0;i < noLinePasses;i ++) {
-        int lines = (noLines > maxLines)?maxLines:noLines;
+    for (uint32_t i = 0; i < noLinePasses; i++) {
+        int lines = (noLines > maxLines) ? maxLines : noLines;
         int noPts = lines * 2 * 2;
-        int size =  noPts * sizeof(float);
+        int size = noPts * sizeof(float);
 
 #ifdef PROFILE_GL
         timer.restart();
 #endif
-        this->buffer->resize(GL_DYNAMIC_DRAW,size);
-        this->buffer->setData(GL_DYNAMIC_DRAW,pts + passOffset,size,0);
+        this->buffer->resize(GL_DYNAMIC_DRAW, size);
+        this->buffer->setData(GL_DYNAMIC_DRAW, pts + passOffset, size, 0);
 
-        glBindVertexArray( this->gvao );
+        glBindVertexArray(this->gvao);
         this->buffer->bind();
-        outlineShader->setAttributeBuffer(0,GL_FLOAT,0,2);
+        outlineShader->setAttributeBuffer(0, GL_FLOAT, 0, 2);
         outlineShader->enableAttributeArray(0);
         glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
 #ifdef PROFILE_GL
@@ -274,31 +273,31 @@ void HybridJoin::renderPolys() {
 #endif
 
     this->polyFbo->bind();
-    glClearColor(0,0,0,0);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE,GL_ZERO);
+    glBlendFunc(GL_ONE, GL_ZERO);
 
     this->polyShader->bind();
     polyShader->setUniformValue("mvpMatrix", mvp);
-    polyShader->setUniformValue("offset",polySize);
-    polyShader->setUniformValue("aggrType",aggr);
-    glBindVertexArray( this->gvao );
+    polyShader->setUniformValue("offset", polySize);
+    polyShader->setUniformValue("aggrType", aggr);
+    glBindVertexArray(this->gvao);
     this->polyBuffer->bind();
-    polyShader->setAttributeBuffer(0,GL_FLOAT,0,2);
-    polyShader->setAttributeBuffer(1,GL_FLOAT,psize,1);
+    polyShader->setAttributeBuffer(0, GL_FLOAT, 0, 2);
+    polyShader->setAttributeBuffer(1, GL_FLOAT, psize, 1);
     polyShader->enableAttributeArray(0);
     polyShader->enableAttributeArray(1);
 
-    polyShader->setUniformValue("width",this->outlineFbo->width());
+    polyShader->setUniformValue("width", this->outlineFbo->width());
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_BUFFER, this->pointsFbo.texId);
-    glUniform1i(this->polyShader->uniformLocation("pointsTex"),0);
+    glUniform1i(this->polyShader->uniformLocation("pointsTex"), 0);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, this->outlineFbo->texture());
-    glUniform1i(this->polyShader->uniformLocation("outlineTex"),1);
+    glUniform1i(this->polyShader->uniformLocation("outlineTex"), 1);
 
     glBindImageTexture(0, texBuf.texId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32I);
 
@@ -333,23 +332,30 @@ void HybridJoin::renderPolys() {
 }
 
 void HybridJoin::clearFbo() {
-    glClearNamedBufferData(this->pointsFbo.bufId,GL_RGBA32I,GL_RGBA,GL_INT,NULL);
+    glClearNamedBufferData(this->pointsFbo.bufId, GL_RGBA32I, GL_RGBA, GL_INT, NULL);
 }
 
 void HybridJoin::performJoin() {
     GLsizeiptr origMem = memLeft;
+    printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
     this->createPolyIndex();
     memLeft = origMem;
-
-    if(indexCreated) {
-        glViewport(0,0,outlineFbo->width(),outlineFbo->height());
+    printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
+    if (indexCreated) {
+        glViewport(0, 0, outlineFbo->width(), outlineFbo->height());
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
         this->drawOutline();
 
         memLeft = origMem;
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
         this->setupPolygonIndex();
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
         this->setupPoints();
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
         this->clearFbo();
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
         this->glJoin();
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, glGetError());
 
         memLeft = origMem;
         this->setupPolygons();

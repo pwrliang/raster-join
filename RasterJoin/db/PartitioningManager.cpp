@@ -22,7 +22,7 @@ PartitioningManager::PartitioningManager(QString indexFileStem, vector<pair<size
 		fd.insert(make_pair(
 			ait->first, 
 			unique_ptr<BufferedPartitionedFile>(new BufferedPartitionedFile(
-				ait->second, 
+				ait->second, // value size
 				indexFileStem + QString::number(ait->first),
 				createFiles
 		))));

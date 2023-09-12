@@ -14,12 +14,18 @@ void GLBuffer::generate(GLenum tgt, bool mapped) {
 void GLBuffer::resize(GLenum usage, GLsizeiptr dataSize)
 {
     if (this->size<dataSize) {
+        GLenum err;
         glBindBuffer(this->target, this->id);
+        err = glGetError();
+        if(err != 0) {
+            std::cout << "glBindBuffer, target: " << this->target << " Memory error: " << err << " " << dataSize << "\n";
+            exit(0);
+        }
         glBufferData(this->target, dataSize, 0, usage);
         this->size = dataSize;
-        GLenum err = glGetError();
+        err = glGetError();
         if(err != 0) {
-            std::cout << "Memory error: " << err << " " << dataSize << "\n";
+            std::cout << "glBufferData, Memory error: " << err << " " << dataSize << "\n";
             exit(0);
         }
 

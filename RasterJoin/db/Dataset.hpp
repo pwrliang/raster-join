@@ -16,7 +16,7 @@ class Dataset {
 
 public:
 
-    Dataset(std::string binFilePath, DatasetType dsType, int64_t limitNbRecords = 0);
+    Dataset(std::string binFilePath, DatasetType dsType, const BoundF &bound, int64_t limitNbRecords = 0);
 	
 	/**
 	 * Retrieve the next record from the file.
@@ -73,6 +73,8 @@ private:
      * The type of the dataset that is used. Currently using either Taxi or Twitter.
      */
     DatasetType dsType;
+
+    BoundF bound;
 };
 
 #endif // RASTER_DATASET

@@ -2,7 +2,13 @@
 #define UTILS_H
 
 #define WORLD_ZOOM_LEVEL 22.f
-
+#define CHECK_GL_ERROR { \
+    int err = glGetError();                         \
+    if (err != 0) {                         \
+        printf("%s:%d gl error: %d\n", __FILE__, __LINE__, err); \
+        exit(1);                  \
+    }                        \
+}
 #include <QtCore/qmath.h>
 #include <QMatrix4x4>
 

@@ -11,8 +11,11 @@
 
 using namespace std;
 
-HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, uint32_t size_z, quint8 attrType[], quint8 numAttr):
-    partManager(NULL), indexFileStem(indexFileStem), lx(size_x), ly(size_y), lz(size_z) {
+HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y,
+                             BoundD bound,
+                             uint32_t size_z, quint8 attrType[],
+                             quint8 numAttr) :
+        partManager(NULL), indexFileStem(indexFileStem), lx(size_x), ly(size_y), lz(size_z) {
 
 
     p1 = 73856093;
@@ -21,24 +24,25 @@ HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, 
 
     //index configuration file
     QFile config_file(indexFileStem + "_config");
-    if(!config_file.open(QIODevice::WriteOnly)) {
+    if (!config_file.open(QIODevice::WriteOnly)) {
         qDebug() << "Cannot create Config File";
         return;
     }
 
     QDataStream out(&config_file);
-    out << lx << ly << lz << p1 << p2 << p3;
+    out << bound.min_lat << bound.max_lat << bound.min_lon << bound.max_lon << lx << ly << lz << p1 << p2 << p3;
 
     out << numAttr; //number of attributes
 
-    for(size_t i = 0; i < numAttr; i++)
+    for (size_t i = 0; i < numAttr; i++)
         out << attrType[i];
 
     config_file.close();
 }
 
-HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, uint32_t size_z, int _p1, int _p2, int _p3) :
-        partManager(NULL), indexFileStem(indexFileStem), p1(_p1), p2(_p2), p3(_p3), lx(size_x), ly(size_y), lz(size_z)  {
+HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, uint32_t size_z, int _p1, int _p2,
+                             int _p3) :
+        partManager(NULL), indexFileStem(indexFileStem), p1(_p1), p2(_p2), p3(_p3), lx(size_x), ly(size_y), lz(size_z) {
 
 }
 
@@ -49,36 +53,37 @@ HashGridIndex::~HashGridIndex() {
 }
 
 
-void HashGridIndex::buildIndex(Dataset* ds, const vector<pair<size_t, size_t>> &attributes) {
+void HashGridIndex::buildIndex(Dataset *ds, const vector <pair<size_t, size_t>> &attributes) {
 
     partManager = new PartitioningManager(indexFileStem, attributes, true);
 
     ds->openFile();
-    std::unique_ptr<Record> record = Record::getNewRecord(ds->getDsType());
+    std::unique_ptr <Record> record = Record::getNewRecord(ds->getDsType());
     int64_t nbRecordsRead = 0;
 
     uint32_t time_min, time_max;
 
-    while(ds->getNextRecord(record.get())) {
+    while (ds->getNextRecord(record.get())) {
         STdims index_dims = record->getIndexDimensions();
         quint64 partId = this->getPartitionId(index_dims.x, index_dims.y, index_dims.t);
 
-        if(!nbRecordsRead)
+        if (!nbRecordsRead)
             time_min = time_max = index_dims.t;
-        else
-        {
-            if(index_dims.t < time_min)
+        else {
+            if (index_dims.t < time_min)
                 time_min = index_dims.t;
-            if(index_dims.t > time_max)
+            if (index_dims.t > time_max)
                 time_max = index_dims.t;
         }
 
         partManager->writeRecord(record.get(), partId);
 
         if (++nbRecordsRead % 1000000 == 0) {
-            qDebug() << qSetRealNumberPrecision(10) << "Read record #" << nbRecordsRead << "/" << ds->getTotalNbRecords();
-            qDebug() << qSetRealNumberPrecision(10) << "Record: getRecordSize=" << record->getRecordSize() << ", getIndexDim=[" <<
-                        index_dims.x << ", " << index_dims.y << ", " << index_dims.t << "]";
+            qDebug() << qSetRealNumberPrecision(10) << "Read record #" << nbRecordsRead << "/"
+                     << ds->getTotalNbRecords();
+            qDebug() << qSetRealNumberPrecision(10) << "Record: getRecordSize=" << record->getRecordSize()
+                     << ", getIndexDim=[" <<
+                     index_dims.x << ", " << index_dims.y << ", " << index_dims.t << "]";
         }
     }
 
@@ -89,12 +94,12 @@ void HashGridIndex::buildIndex(Dataset* ds, const vector<pair<size_t, size_t>> &
 }
 
 
-void HashGridIndex::loadIndex(const vector<pair<size_t, size_t>>& attributes) {
+void HashGridIndex::loadIndex(const vector <pair<size_t, size_t>> &attributes) {
 
     partManager = new PartitioningManager(indexFileStem, attributes, false);
 }
 
-void HashGridIndex::queryIndex(float region_low[3], float region_high[3], QueryResult& queryResult) {
+void HashGridIndex::queryIndex(float region_low[3], float region_high[3], QueryResult &queryResult) {
 
     if (partManager == NULL) {
         std::cerr << "Warning HashGridIndex: index not loaded." << std::endl;
@@ -102,8 +107,9 @@ void HashGridIndex::queryIndex(float region_low[3], float region_high[3], QueryR
     }
 
 
-    std::unordered_set<qint64> partsId;
+    std::unordered_set <qint64> partsId;
     this->getIntersectingPartitions(region_low, region_high, partsId);
+
 //    qDebug() << region_low[0] << region_low[1] << region_low[2];
 //    qDebug() << region_high[0] << region_high[1] << region_high[2];
 
@@ -130,7 +136,8 @@ qint64 HashGridIndex::getPartitionId(float x_coor, float y_coor, uint32_t z_coor
 }
 
 //find the grid partitions for a 3D box
-void HashGridIndex::getIntersectingPartitions(float region_low[3], float region_high[3], std::unordered_set<qint64>& allParts) {
+void HashGridIndex::getIntersectingPartitions(float region_low[3], float region_high[3],
+                                              std::unordered_set <qint64> &allParts) {
 
     // convert query box q to left-lower and right-upper grid cells:
     const qint64 cellxmin = region_low[0] / this->lx;

@@ -7,27 +7,48 @@
 
 using namespace std;
 
-Dataset::Dataset(string binFilePath, DatasetType dsType, int64_t limitNbRecords):
-    binFilePath(binFilePath), dummyRecord(Record::getNewRecord(dsType)), limitNbRecords(limitNbRecords), nbRecordsRead(0), dsType(dsType) { }
+Dataset::Dataset(string binFilePath, DatasetType dsType, const BoundD &bound, int64_t limitNbRecords, bool isBin) :
+        binFilePath(binFilePath), dummyRecord(Record::getNewRecord(dsType)),
+        bound(bound),
+        limitNbRecords(limitNbRecords),
+        isBin(isBin), nbRecordsRead(0), dsType(dsType) {}
 
-bool Dataset::getNextRecord(Record* record) {
-
+bool Dataset::getNextRecord(Record *record) {
     if (
-        !binFile.is_open() || !binFile.good() || 					// file not properly open
-        (limitNbRecords > 0 && nbRecordsRead >= limitNbRecords) ||	// limit of records to be read passed
-        nbRecordsRead >= totalNbRecords								// no records left to read
-    ) {
+            !binFile.is_open() || !binFile.good() ||                    // file not properly open
+            (limitNbRecords > 0 && nbRecordsRead >= limitNbRecords) ||    // limit of records to be read passed
+            nbRecordsRead >= totalNbRecords                                // no records left to read
+            ) {
         return false;
     }
     bool found = false;
-    while(nbRecordsRead < totalNbRecords && !found) {
-        binFile.read(record->getPointer(), getRecordSize());
-        nbRecordsRead++;
-        STdims stdims = record->getIndexDimensions();
-        PointF transformed;
-        if(transformPoint(PointF(stdims.x,stdims.y),transformed)) {
-            found = true;
-            record->updateRecordLocation(transformed.x(),transformed.y());
+
+    if (isBin) {
+        while (nbRecordsRead < totalNbRecords && !found) {
+            binFile.read(record->getPointer(), getRecordSize());
+            nbRecordsRead++;
+            STdims stdims = record->getIndexDimensions();
+            PointF transformed;
+            if (transformPoint(PointF(stdims.x, stdims.y), transformed, bound)) {
+                found = true;
+                record->updateRecordLocation(transformed.x(), transformed.y());
+            }
+        }
+    } else {
+        std::string line;
+        while (nbRecordsRead < totalNbRecords && !found) {
+            std::getline(binFile, line);
+            if (line.empty()) {
+                continue;
+            }
+            record->parseLine(line);
+            nbRecordsRead++;
+            STdims stdims = record->getIndexDimensions();
+            PointF transformed;
+            if (transformPoint(PointF(stdims.x, stdims.y), transformed, bound)) {
+                found = true;
+                record->updateRecordLocation(transformed.x(), transformed.y());
+            }
         }
     }
     //XXX
@@ -37,23 +58,32 @@ bool Dataset::getNextRecord(Record* record) {
 }
 
 void Dataset::openFile() {
+    if (isBin) {
+        // open file
+        binFile.open(binFilePath, ios::in | ios::binary);
 
-    // open file
-    binFile.open(binFilePath, ios::in | ios::binary);
+        // get the file size
+        int64_t begin, end;
+        begin = binFile.tellg();
+        binFile.seekg(0, ios::end);
+        end = binFile.tellg();
 
-    // get the file size
-    int64_t begin, end;
-    begin = binFile.tellg();
-    binFile.seekg(0, ios::end);
-    end = binFile.tellg();
+        int64_t diff = (end - begin);
+        totalNbRecords = diff / getRecordSize();
 
-    int64_t diff = (end - begin);
-    totalNbRecords = diff / getRecordSize();
+        // go back to beginning
+        binFile.seekg(0, ios::beg);
 
-    // go back to beginning
-    binFile.seekg(0, ios::beg);
-
-    cout << "Dataset: opened file with " << totalNbRecords << " records (with " << diff << " bytes and record size " << getRecordSize() << ")." << endl;
+        cout << "Dataset: opened file with " << totalNbRecords << " records (with " << diff << " bytes and record size "
+             << getRecordSize() << ")." << endl;
+    } else {
+        binFile.open(binFilePath, ios::in);
+        totalNbRecords = std::count(std::istreambuf_iterator<char>(binFile),
+                                    std::istreambuf_iterator<char>(), '\n');
+        cout << "Dataset: opened file with " << totalNbRecords << " records" << endl;
+        binFile.clear();
+        binFile.seekg(0, std::ios::beg);
+    }
 }
 
 void Dataset::closeFile() {

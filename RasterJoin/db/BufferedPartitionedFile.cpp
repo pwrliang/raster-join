@@ -15,9 +15,9 @@ valueSize(valueSize), current_offset(0), create(_create) {
     this->fname = string(indexFileStem.toUtf8().constData()) + "_payload.dat";
     this->mname = indexFileStem + "_mapping";
     
-    //cerr << "mname=" << indexFileStem.toStdString() << endl;
+    cerr << "fname=" << indexFileStem.toStdString() << endl;
 
-    //cerr << "mname=" << this->mname.toStdString() << endl;
+    cerr << "mname=" << this->mname.toStdString() << endl;
 
     if(create) {
         file  = new BufferedFile();

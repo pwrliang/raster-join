@@ -53,6 +53,7 @@ HEADERS += \
     common/TypeFunctions.hpp \
     common/UsefulFuncs.hpp \
     common/Utils.h \
+    common/stopwatch.h \
     db/BufferedFile.hpp \
     db/BufferedPartitionedFile.hpp \
     db/Dataset.hpp \

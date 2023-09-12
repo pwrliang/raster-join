@@ -17,13 +17,15 @@ class Dataset {
 
 public:
 
-    Dataset(std::string binFilePath, DatasetType dsType, int64_t limitNbRecords = 0);
+    Dataset(std::string binFilePath, DatasetType dsType,
+            const BoundD &bound,
+            int64_t limitNbRecords = 0, bool isBin = true);
 
     /**
      * Retrieve the next record from the file.
      * Returns true if success and false if failure or EOF.
      */
-    bool getNextRecord(Record* record);
+    bool getNextRecord(Record *record);
 
     /**
      * Opens the file and get the total number of records.
@@ -39,9 +41,11 @@ public:
     size_t getAttributeSize(unsigned int n);
 
     int64_t getTotalNbRecords() { return totalNbRecords; }
+
     int64_t getNbRecordsRead() { return nbRecordsRead; }
 
     uint64_t getRecordSize();
+
     uint64_t getNbAttributes();
 
     DatasetType getDsType();
@@ -50,11 +54,12 @@ private:
 
     std::string binFilePath;
     std::fstream binFile;
+    bool isBin;
 
     /**
      * Dummy record kept to get some fields.
      */
-    std::unique_ptr<Record> dummyRecord;
+    std::unique_ptr <Record> dummyRecord;
 
     int64_t totalNbRecords;
 
@@ -74,6 +79,8 @@ private:
      * The type of the dataset that is used. Currently using either Taxi or Twitter.
      */
     DatasetType dsType;
+
+    BoundD bound;
 };
 
 #endif // RASTER_DATASET

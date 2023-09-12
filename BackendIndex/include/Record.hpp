@@ -21,7 +21,7 @@ struct STdims {
 class Record {
 	
 public:
-
+    virtual ~Record() = default;
 	virtual size_t getAttributeSize(unsigned int n) = 0;
 	virtual std::unique_ptr<char[]> getAttributeAsBinary(unsigned int n) = 0;
     virtual STdims getIndexDimensions() const = 0;
@@ -33,6 +33,8 @@ public:
 	 * Returns a pointer to the memory where to copy the data from disk.
 	 */
 	virtual char * getPointer() = 0;
+
+    virtual void parseLine(const std::string &line) {}
 	
     static std::unique_ptr<Record> getNewRecord(DatasetType dsType);
 

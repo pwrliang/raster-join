@@ -17,6 +17,7 @@ HEADERS += \
     include/Record.hpp \
     include/TaxiRecord.hpp \
     include/TwitterRecord.hpp \
+    include/SimplePointRecord.hpp \
     include/PartitioningManager.hpp \
     common/Common.h \
     include/QueryResult.hpp \

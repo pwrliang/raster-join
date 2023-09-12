@@ -21,14 +21,14 @@ QString joinType, databaseName, polyFile, polyData, experiment;
 uint32_t start_time, end_time;
 
 //Handlers
-GLHandler* handler;
-DataHandler* dataHandler;
-set<size_t> attributes;
+GLHandler *handler;
+DataHandler *dataHandler;
+set <size_t> attributes;
 uint64_t inputSize;
-float* points;
+float *points;
 bool inMemory;
 bool opAgg, opTime;
-std::vector<QueryConstraint> constraints;
+std::vector <QueryConstraint> constraints;
 int aggrAttrib;
 QString timeFile, aggFile;
 
@@ -37,14 +37,13 @@ int64_t gpuMemInMB;
 //output
 QVector<int> agg, bounds;
 
-void ensureOpenGLFormat()
-{
+void ensureOpenGLFormat() {
     QSurfaceFormat glf = QSurfaceFormat::defaultFormat();
 #if defined (__APPLE__)
     glf.setVersion(4,1);
     glf.setProfile(QSurfaceFormat::CoreProfile);
 #else
-    glf.setVersion(4,5);
+    glf.setVersion(4, 5);
     glf.setProfile(QSurfaceFormat::CompatibilityProfile);
 #endif
     glf.setSamples(4);
@@ -62,14 +61,13 @@ GLHandler::FunctionType getJoinOperator() {
     GLHandler::FunctionType joinOperator;
     if (joinType == "raster") {
         joinOperator = GLHandler::RasterJoinFn;
-    }
-    else if(joinType == "hybrid") {
+    } else if (joinType == "hybrid") {
         // hybrid raster join - accurate
         joinOperator = GLHandler::HybridJoinFn;
-    } else if(joinType == "index") {
+    } else if (joinType == "index") {
         // brute force join - accurate
         joinOperator = GLHandler::IndexJoinFn;
-    } else if(joinType == "errorbounds") {
+    } else if (joinType == "errorbounds") {
         // compute error bounds of raster approach
         joinOperator = GLHandler::RasterJoinBoundFn;
     } else {
@@ -111,7 +109,7 @@ void setupConstraints() {
         constraints.push_back(t);
     }
 
-    for(size_t i = 0;i < constraints.size();i ++) {
+    for (size_t i = 0; i < constraints.size(); i++) {
         attributes.insert(constraints[i].attribId);
         qDebug() << "Attributes " << constraints[i].attribId << " ";
     }
@@ -119,36 +117,43 @@ void setupConstraints() {
 
 void setupExperiment() {
     bool useIndexBackend = true;
-    if(useIndexBackend) {
+    // polyFile poly list /local/storage/liang/Datasets/rasterjoin-data/polys/nyc-polygons.txt
+    // databaseName --backendIndexName /local/storage/liang/Datasets/rasterjoin-data/taxi/taxi_full_index
+    // location_attribute --locAttrib 1
+    // polyData --polygonDataset 16384
+    if (useIndexBackend) {
         // init data handler
         dataHandler = new DataHandler();
+        // read all polygons
         dataHandler->initData(polyFile, databaseName, attributes, location_attribute);
-
+        // set currentCollection
         dataHandler->setPolygonQuery(polyData);
         Bound bound = dataHandler->getPolyHandler()->getBounds();
 
-        // query index
-        float region_low[3] = {(float)bound.leftBottom.x(), (float) bound.leftBottom.y(), (float) start_time}; //TODO: keep time as long in the index
+        // query index, get points that are overlapping with the union of polygon boundaries
+        // lookup hashGridIndex
+        float region_low[3] = {(float) bound.leftBottom.x(), (float) bound.leftBottom.y(),
+                               (float) start_time}; //TODO: keep time as long in the index
         float region_high[3] = {(float) bound.rightTop.x(), (float) bound.rightTop.y(), (float) end_time};
         qDebug() << "querying";
         dataHandler->executeQuery(region_low, region_high);
         //TODO: Delete the content-> add a method in Query Result so that the whole content is cleaned up.
 
-        if(nAttrib > 0) {
+        if (nAttrib > 0) {
             dataHandler->setQueryConstraints(constraints);
         }
-        if(aggrAttrib != -1) {
-            dataHandler->setAggregation(Avg,aggrAttrib);
+        if (aggrAttrib != -1) {
+            dataHandler->setAggregation(Avg, aggrAttrib);
         }
 
         handler = GLHandler::getInstance(gpuMemInMB, inMemory);
-        if(handler == NULL) {
+        if (handler == NULL) {
             std::cout << "Failed to obtain handler";
             exit(0);
         }
         handler->setDataHandler(dataHandler);
         handler->setAccuracyDistance(accuracy);
-        handler->setPolyIndexResolution(gridRes,gridRes);
+        handler->setPolyIndexResolution(gridRes, gridRes);
     } else {
 //        sortedDataHandler = new SortedDataHandler();
 //        uint64_t numberOfBytes = inputSize*2*sizeof(float);
@@ -168,7 +173,7 @@ void setupExperiment() {
 
 void runExperiment() {
     GLHandler::FunctionType joinType = getJoinOperator();
-    for (size_t k=0; k<nIter; k++) {
+    for (size_t k = 0; k < nIter; k++) {
         qDebug() << "iteration" << k;
         agg = handler->executeFunction(joinType);
         bounds = handler->getErrorBounds(joinType);
@@ -181,42 +186,42 @@ void outputErrorBounds(uint32_t endTime = 0, int res = 0) {
     QFile f(fileName);
     if (!f.open(QFile::WriteOnly | QFile::Text)) return;
     QTextStream op(&f);
-    for(int i = 0;i < np;i ++) {
+    for (int i = 0; i < np; i++) {
         int fn = bounds[i];
         int fp = bounds[i + np];
         int fn1 = bounds[i + np * 2];
         int fp1 = bounds[i + np * 3];
         op << i << "\t" << (agg[i] - fp1) << "\t" << (agg[i] + fn1) << "\t"
-                        << (agg[i] - fp) << "\t" << (agg[i] + fn) << "\n";
+           << (agg[i] - fp) << "\t" << (agg[i] + fn) << "\n";
     }
     f.close();
 }
 
 void printResults(QVector<int> agg, int top, uint32_t endTime = 0, int res = 0) {
     int polySize = agg.size() / 3;
-    if(endTime > 0) {
+    if (endTime > 0) {
         QString fileName = aggFile + "/raster_" + QString::number(endTime) + "_" + QString::number(res) + ".csv";
         QFile f(fileName);
         if (!f.open(QFile::WriteOnly | QFile::Text)) return;
         QTextStream op(&f);
-        for(int i = 0;i < top; i ++) {
-            if(aggrAttrib == -1) { // count
+        for (int i = 0; i < top; i++) {
+            if (aggrAttrib == -1) { // count
                 op << i << "\t" << agg[i] << "\n";
             } else { // avg
                 float num = float(agg[polySize + i]) * 100.f + agg[2 * polySize + i] / 10.f;
                 float den = agg[i];
-                float avg = (agg[i] == 0)? 0: num / den;
+                float avg = (agg[i] == 0) ? 0 : num / den;
                 op << qSetRealNumberPrecision(10) << i << "\t" << avg << "\n";
             }
         }
     } else {
-        for(int i = 0;i < top; i ++) {
-            if(aggrAttrib == -1) { // count
+        for (int i = 0; i < top; i++) {
+            if (aggrAttrib == -1) { // count
                 std::cout << i << "\t" << agg[i] << "\t" << std::endl;
             } else { // avg
                 float num = float(agg[polySize + i]) * 100.f + agg[2 * polySize + i] / 10.f;
                 float den = agg[i];
-                float avg = (agg[i] == 0)? 0: num / den;
+                float avg = (agg[i] == 0) ? 0 : num / den;
                 std::cout << i << "\t" << avg << "\n";
 //                std::cout << i << "\t" << agg[i] << " " << agg[polySize + i] << " " << agg[polySize * 2 + i] << "\n";
             }
@@ -225,22 +230,22 @@ void printResults(QVector<int> agg, int top, uint32_t endTime = 0, int res = 0) 
 }
 
 void outputResults() {
-    if(opAgg) {
-        if(getJoinOperator() != GLHandler::RasterJoinFn && getJoinOperator() != GLHandler::RasterJoinBoundFn) {
+    if (opAgg) {
+        if (getJoinOperator() != GLHandler::RasterJoinFn && getJoinOperator() != GLHandler::RasterJoinBoundFn) {
             accuracy = 0;
         }
-        if(getJoinOperator() == GLHandler::RasterJoinBoundFn) {
-            outputErrorBounds(end_time,accuracy);
+        if (getJoinOperator() == GLHandler::RasterJoinBoundFn) {
+            outputErrorBounds(end_time, accuracy);
         } else {
-            printResults(agg,agg.size()/3,end_time,accuracy);
+            printResults(agg, agg.size() / 3, end_time, accuracy);
         }
     }
     {
         GLHandler::FunctionType joinType = getJoinOperator();
         QString timing = handler->printTimeStats(joinType);
-        if(opTime) {
+        if (opTime) {
             QFile fi(timeFile);
-            if(!fi.open(QFile::Append | QFile::Text)) {
+            if (!fi.open(QFile::Append | QFile::Text)) {
                 std::cerr << "could not open file for writing: " << timeFile.toStdString() << "\n";
             }
             QTextStream op(&fi);
@@ -251,98 +256,98 @@ void outputResults() {
     }
 }
 
-bool parseArguments(const QMap<QString,QString> &args) {
-    QList<QString> keys = args.keys();
+bool parseArguments(const QMap <QString, QString> &args) {
+    QList <QString> keys = args.keys();
     qDebug() << keys;
-    if(keys.contains("--help")) {
+    if (keys.contains("--help")) {
         return false;
     }
-    if(keys.contains("--nIter")) {
+    if (keys.contains("--nIter")) {
         nIter = args["--nIter"].toInt();
     } else {
         nIter = 1;
     }
-    if(keys.contains("--accuracy")) {
+    if (keys.contains("--accuracy")) {
         accuracy = args["--accuracy"].toInt();
     } else {
         accuracy = 100;
     }
-    if(keys.contains("--joinType")) {
+    if (keys.contains("--joinType")) {
         joinType = args["--joinType"];
     } else {
         return false;
     }
-    if(keys.contains("--backendIndexName")) {
+    if (keys.contains("--backendIndexName")) {
         databaseName = args["--backendIndexName"];
     } else {
         return false;
     }
-    if(keys.contains("--polygonList")) {
+    if (keys.contains("--polygonList")) {
         polyFile = args["--polygonList"];
     } else {
         return false;
     }
-    if(keys.contains("--polygonDataset")) {
+    if (keys.contains("--polygonDataset")) {
         polyData = args["--polygonDataset"];
     } else {
         return false;
     }
-    if(keys.contains("--locAttrib")) {
+    if (keys.contains("--locAttrib")) {
         qDebug() << "found loc attrib";
         location_attribute = args["--locAttrib"].toInt();
     } else {
         return false;
     }
-    if(keys.contains("--indexRes")) {
+    if (keys.contains("--indexRes")) {
         gridRes = args["--indexRes"].toInt();
     } else {
         gridRes = 256;
     }
-    if(keys.contains("--nAttrib")) {
+    if (keys.contains("--nAttrib")) {
         nAttrib = args["--nAttrib"].toInt();
     } else {
         nAttrib = 0;
     }
-    if(keys.contains("--startTime")) {
-        start_time = (uint32_t)args["--startTime"].toLongLong();
+    if (keys.contains("--startTime")) {
+        start_time = (uint32_t) args["--startTime"].toLongLong();
     } else {
         return false;
     }
-    if(keys.contains("--endTime")) {
-        end_time = (uint32_t)args["--endTime"].toLongLong();
+    if (keys.contains("--endTime")) {
+        end_time = (uint32_t) args["--endTime"].toLongLong();
     } else {
         return false;
     }
-    if(keys.contains("--inmem")) {
+    if (keys.contains("--inmem")) {
         inMemory = true;
     } else {
         inMemory = false;
     }
-    if(keys.contains("--opAggregation")) {
+    if (keys.contains("--opAggregation")) {
         aggFile = args["--opAggregation"];
         opAgg = true;
     } else {
         opAgg = false;
     }
-    if(keys.contains("--inputSize")) {
-        inputSize = (uint32_t)args["--inputSize"].toLongLong();
+    if (keys.contains("--inputSize")) {
+        inputSize = (uint32_t) args["--inputSize"].toLongLong();
     } else {
         inputSize = 0;
     }
-    if(keys.contains("--avg")) {
-        aggrAttrib = (uint32_t)args["--avg"].toInt();
+    if (keys.contains("--avg")) {
+        aggrAttrib = (uint32_t) args["--avg"].toInt();
     } else {
         aggrAttrib = -1;
     }
 
-    if(keys.contains("--outputTime")) {
+    if (keys.contains("--outputTime")) {
         opTime = true;
         timeFile = args["--outputTime"].trimmed();
     } else {
         opTime = false;
     }
-    if(keys.contains("--gpuMem")) {
-        gpuMemInMB = (int64_t)args["--gpuMem"].toLongLong();
+    if (keys.contains("--gpuMem")) {
+        gpuMemInMB = (int64_t) args["--gpuMem"].toLongLong();
     } else {
         // default is 3GB = 3072MB
         gpuMemInMB = 8LL * 256LL;
@@ -350,8 +355,7 @@ bool parseArguments(const QMap<QString,QString> &args) {
     return true;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
 #ifdef BASELINE
@@ -376,32 +380,32 @@ int main(int argc, char *argv[])
     assert(sizeof(QueryConstraint) == 4 * sizeof(int));
 
     QStringList argString = app.arguments();
-    QMap<QString, QString> args;
-    for(int i = 1;i < argString.size();i ++) {
+    QMap <QString, QString> args;
+    for (int i = 1; i < argString.size(); i++) {
         QString arg1 = argString[i];
-        if(arg1.startsWith("--")) {
+        if (arg1.startsWith("--")) {
             QString arg2 = " ";
-            if((i + 1) < argString.length()) {
+            if ((i + 1) < argString.length()) {
                 arg2 = argString[i + 1];
             }
-            if(arg2.startsWith("--")) {
+            if (arg2.startsWith("--")) {
                 args[arg1] = " ";
             } else {
                 args[arg1] = arg2;
             }
         }
     }
-    if(!parseArguments(args)) {
+    if (!parseArguments(args)) {
         cout << "help message: see code!" << "\n";
         return 1;
     }
 
     attributes.clear();
-    if(nAttrib > 0) {
+    if (nAttrib > 0) {
         // Make sure it is only taxi data
         setupConstraints();
     }
-    if(aggrAttrib != -1) {
+    if (aggrAttrib != -1) {
         attributes.insert(aggrAttrib);
     }
 

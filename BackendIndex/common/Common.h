@@ -19,11 +19,17 @@
 // 3 objects of 16 bytes (attributes pick_y pick_x pickup_time) = 160 bytes
 
 
-enum AttributeType {Location = 0, Uint, Int, Float};
+enum AttributeType {
+    Location = 0, Uint, Int, Float
+};
 
-enum ConstraintType {EQ = 0, LT, LTE, GT, GTE};
+enum ConstraintType {
+    EQ = 0, LT, LTE, GT, GTE
+};
 
-enum DatasetType {Taxi = 0, Twitter};
+enum DatasetType {
+    Taxi = 0, Twitter, SimplePoint
+};
 
 union Value {
     int ival;
@@ -38,8 +44,22 @@ struct QueryConstraint {
     int dummy;
 };
 
+
+struct BoundD {
+    double min_lat, max_lat;
+    double min_lon, max_lon;
+
+    BoundD() {
+        min_lat = std::numeric_limits<double>::max();
+        max_lat = -std::numeric_limits<double>::max();
+        min_lon = std::numeric_limits<double>::max();
+        max_lon = -std::numeric_limits<double>::max();
+    }
+};
+
 typedef QVector<int> Node;
 typedef QVector<bool> NodeFlag;
+
 
 #endif // COMMON
 
