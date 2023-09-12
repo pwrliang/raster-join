@@ -8,7 +8,8 @@
 
 GLFunction::GLFunction(GLHandler *handler) : handler(handler), dirty(true) {
     // default 100 meters;
-    this->cellSize = (100.0 / getGroundResolution());
+    // this->cellSize = (100.0 / getGroundResolution());
+    this->cellSize = 0;
     gvao = 0;
     useGL = true;
 }
@@ -22,10 +23,10 @@ void GLFunction::setupForRender() {
     dirty = false;
 }
 
-void GLFunction::setMaxCellSize(double size) {
+void GLFunction::setMaxCellSize(double size, const BoundD &bound) {
     // size in meters
     size /= std::sqrt(2);
-    cellSize = (size / getGroundResolution());
+    cellSize = (size / getGroundResolutionBound(bound));
 }
 
 QVector<int> GLFunction::execute() {

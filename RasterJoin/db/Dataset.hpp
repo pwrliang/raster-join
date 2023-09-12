@@ -16,7 +16,7 @@ class Dataset {
 
 public:
 
-    Dataset(std::string binFilePath, DatasetType dsType, const BoundF &bound, int64_t limitNbRecords = 0);
+    Dataset(std::string binFilePath, DatasetType dsType, const BoundD &bound, int64_t limitNbRecords = 0);
 	
 	/**
 	 * Retrieve the next record from the file.
@@ -74,7 +74,7 @@ private:
      */
     DatasetType dsType;
 
-    BoundF bound;
+    BoundD bound;
 };
 
 #endif // RASTER_DATASET

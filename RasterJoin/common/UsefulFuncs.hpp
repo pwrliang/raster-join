@@ -68,13 +68,13 @@ QVector<int> triangulate(QPolygonF vertices, QVector<int> poly);
 QVector<int> triangulatePolygon(QPolygonF poly);
 
 // returns true if point is to be used, and the transformed point is stored
-bool transformPoint(PointF latlon, PointF &transformed, const BoundF &bound);
+bool transformPoint(PointF latlon, PointF &transformed, const BoundD &bound);
 
 bool reverseTransformPoint(PointF transformed, PointF &latlon);
 
-bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundF &bound);
+bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundD &bound);
 
-double getGroundResolution(const BoundD& bound);
+double getGroundResolutionBound(const BoundD &bound);
 
 double CalcMedianTime(QVector <quint64> timings);
 

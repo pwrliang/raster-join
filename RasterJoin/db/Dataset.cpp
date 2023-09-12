@@ -7,7 +7,7 @@
 
 using namespace std;
 
-Dataset::Dataset(string binFilePath, DatasetType dsType, const BoundF &bound, int64_t limitNbRecords) :
+Dataset::Dataset(string binFilePath, DatasetType dsType, const BoundD &bound, int64_t limitNbRecords) :
         binFilePath(binFilePath), dummyRecord(Record::getNewRecord(dsType)), limitNbRecords(limitNbRecords),
         bound(bound), nbRecordsRead(0), dsType(dsType) {}
 

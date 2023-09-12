@@ -5,7 +5,7 @@
 #include <QPointF>
 #include <QMatrix4x4>
 #include <QSize>
-
+#include "Common.h"
 #include "GLData.hpp"
 
 #define PROFILE_GL
@@ -24,7 +24,7 @@ public:
 
 public:
     void setupForRender();
-    void setMaxCellSize(double size);
+    void setMaxCellSize(double size, const BoundD& bound);
     QVector<int> execute();
 
 public:

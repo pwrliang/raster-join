@@ -29,6 +29,10 @@ public:
     vector<QueryConstraint> getQueryConstraints();
     void getAggregation(Aggregation &type, int &attribId);
 
+    BoundD getOriginBound() const {
+        return origin_bound;
+    }
+
 public:
     HashGridIndex* hashGridIndex;
 
@@ -38,6 +42,7 @@ private:
     Aggregation aggr;
     int aggrAttrib;
     PolyHandler *polyHandler;
+    BoundD origin_bound;
 };
 
 #endif // DATAHANDLER_HPP

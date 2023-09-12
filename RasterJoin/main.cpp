@@ -128,7 +128,11 @@ void setupExperiment() {
         dataHandler->initData(polyFile, databaseName, attributes, location_attribute);
         // set currentCollection
         dataHandler->setPolygonQuery(polyData);
+        auto origin_bound = dataHandler->getOriginBound();
         Bound bound = dataHandler->getPolyHandler()->getBounds();
+
+        printf("transformed bound x %f %f, y %f %f\n", bound.leftBottom.x(), bound.rightTop.x(),
+               bound.leftBottom.y(), bound.rightTop.y());
 
         // query index, get points that are overlapping with the union of polygon boundaries
         // lookup hashGridIndex
@@ -152,7 +156,7 @@ void setupExperiment() {
             exit(0);
         }
         handler->setDataHandler(dataHandler);
-        handler->setAccuracyDistance(accuracy);
+        handler->setAccuracyDistance(accuracy, origin_bound);
         handler->setPolyIndexResolution(gridRes, gridRes);
     } else {
 //        sortedDataHandler = new SortedDataHandler();

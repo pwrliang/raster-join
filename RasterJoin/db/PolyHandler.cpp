@@ -17,7 +17,8 @@ PolyHandler::PolyHandler() {
 
 }
 
-void PolyHandler::initFromFile(QString polyIndex) {
+void PolyHandler::initFromFile(QString polyIndex, const BoundD &origin_bound) {
+    this->origin_bound = origin_bound;
     QFile fi(polyIndex); // polygon list
     if (!fi.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug() << "Could not open file" << polyIndex;
@@ -45,7 +46,7 @@ void PolyHandler::addPolygonCollection(QString collectionName, QString polyFile)
     Bound collectionBounds;
     printf("Add Polygon collection %s, path: %s\n", qPrintable(collectionName), qPrintable(polyFile));
     // read polygon file and transform coordinates
-    readPolygons(polyFile, collection, collectionBounds.leftBottom, collectionBounds.rightTop);
+    readPolygons(polyFile, collection, collectionBounds.leftBottom, collectionBounds.rightTop, origin_bound);
     printf("Bounds left-bottom %f %f, right-top %f %f\n", collectionBounds.leftBottom.x(),
            collectionBounds.leftBottom.y(), collectionBounds.rightTop.x(), collectionBounds.rightTop.y());
     this->addPolygonCollection(collectionName, collection, collectionBounds);
@@ -136,7 +137,8 @@ int PolyHandler::getNoPolys() {
     return this->polyDb[currentCollection].size();
 }
 
-void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPointF &leftBottom, QPointF &rightTop) {
+void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPointF &leftBottom, QPointF &rightTop,
+                               const BoundD &origin_bound) {
     QFile fi(polyFile);
     if (!fi.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qDebug() << "Could not open file" << polyFile;
@@ -147,8 +149,6 @@ void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPoin
     int tot, np, n;
     double min_x = std::numeric_limits<double>::max(), max_x = std::numeric_limits<double>::lowest(),
             min_y = std::numeric_limits<double>::max(), max_y = std::numeric_limits<double>::lowest();
-    BoundF origin_bound;
-
     QTextStream input(&fi);
 
     input >> tot;

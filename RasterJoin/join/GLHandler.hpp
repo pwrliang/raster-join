@@ -15,10 +15,9 @@
 #include <EGL/egl.h>
 #endif
 
-typedef QSharedPointer<GLFunction> PGLFunction;
+typedef QSharedPointer <GLFunction> PGLFunction;
 
-class GLHandler
-{
+class GLHandler {
 public:
     enum FunctionType {
         RasterJoinFn = 0,
@@ -30,22 +29,29 @@ public:
 
 private:
     GLHandler(int64_t gpuMemMB, bool inMemory);
+
     ~GLHandler();
-    static GLHandler* instance;
+
+    static GLHandler *instance;
 
 public:
-    static GLHandler* getInstance(int64_t gpuMemMB = 2048LL, bool inMemory = false);
+    static GLHandler *getInstance(int64_t gpuMemMB = 2048LL, bool inMemory = false);
 
 public:
     void setupContext();
+
     void initializeGL();
 
     QVector<int> executeFunction(FunctionType fn);
+
     QVector<int> getErrorBounds(FunctionType fn);
+
     void setDataHandler(DataHandler *dataHandler);
+
     QString printTimeStats(FunctionType fn);
 
-    void setAccuracyDistance(double size);
+    void setAccuracyDistance(double size, const BoundD &bound);
+
     void setPolyIndexResolution(int resx, int resy);
 
 protected:
@@ -53,15 +59,15 @@ protected:
 
 protected:
 #ifndef USE_EGL
-    QOpenGLContext * context;
-    QOffscreenSurface * surface;
+    QOpenGLContext *context;
+    QOffscreenSurface *surface;
 #else
     EGLContext context;
     EGLSurface surface;
     EGLDisplay display;
 #endif
 
-    QMap<FunctionType, PGLFunction> functions;
+    QMap <FunctionType, PGLFunction> functions;
 
 public:
     DataHandler *dataHandler;
@@ -71,7 +77,7 @@ public:
 
 public:
     // polygon index resolution
-    int presx,presy;
+    int presx, presy;
     int inmem;
 
     int accuracy;

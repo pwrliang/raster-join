@@ -26,7 +26,7 @@ enum ConstraintType {
 };
 
 enum DatasetType {
-    Taxi = 0, Twitter
+    Taxi = 0, Twitter, SimplePoint
 };
 
 enum Aggregation {

@@ -52,7 +52,7 @@ void RasterJoin::updateBuffers() {
     Bound bound = poly->getBounds();
     QPointF diff = bound.rightTop - bound.leftBottom;
 
-    printf("diff x: %f, diff y: %f\n", diff.x(), diff.y());
+    assert(cellSize > 0);
 
     actualResX = int(std::ceil(diff.x() / cellSize));
     actualResY = int(std::ceil(diff.y() / cellSize));
@@ -228,6 +228,8 @@ void RasterJoin::performJoin() {
             offset += dataSize;
         }
 
+        printf("splitx %d, splity: %d\n", splitx, splity);
+
         for (int x = 0; x < splitx; x++) {
             for (int y = 0; y < splity; y++) {
                 QPointF lb = bound.leftBottom + QPointF(x * diff.x(), y * diff.y());
@@ -236,11 +238,11 @@ void RasterJoin::performJoin() {
                 sw.start();
                 this->renderPoints();
                 sw.stop();
-                printf("pass %d, renderPoints: %f\n", i, sw.ms());
+//                printf("pass %d, renderPoints: %f\n", i, sw.ms());
                 sw.start();
                 this->renderPolys();
                 sw.stop();
-                printf("pass %d, renderPolys: %f\n", i, sw.ms());
+//                printf("pass %d, renderPolys: %f\n", i, sw.ms());
             }
         }
 

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, BoundD bound, uint32_t size_z,
+HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, uint32_t size_z,
                              quint8 attrType[], quint8 numAttr) :
         partManager(NULL), indexFileStem(indexFileStem), lx(size_x), ly(size_y), lz(size_z) {
 
@@ -26,7 +26,7 @@ HashGridIndex::HashGridIndex(QString indexFileStem, float size_x, float size_y, 
     }
 
     QDataStream out(&config_file);
-    out << bound.min_lat << bound.max_lat << bound.min_lon << bound.max_lon << lx << ly << lz << p1 << p2 << p3;
+    out << lx << ly << lz << p1 << p2 << p3;
 
     out << numAttr; //number of attributes
 
@@ -89,6 +89,7 @@ void HashGridIndex::queryIndex(float region_low[3], float region_high[3], QueryR
 
     std::unordered_set <qint64> partsId;
     this->getIntersectingPartitions(region_low, region_high, partsId);
+
 //    qDebug() << region_low[0] << region_low[1] << region_low[2];
 //    qDebug() << region_high[0] << region_high[1] << region_high[2];
 

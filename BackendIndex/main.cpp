@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 
     createBackendIndex();
 
-    testBackendIndex();
+    // testBackendIndex();
 
     exit(0);
     return app.exec();

@@ -38,7 +38,7 @@ static const EGLint pbufferAttribs[] = {
 };
 #endif
 
-GLHandler* GLHandler::instance = NULL;
+GLHandler *GLHandler::instance = NULL;
 
 GLHandler::GLHandler(int64_t gpuMemMB, bool inMemory) : dataHandler(NULL), inmem(inMemory) {
     // OpenGL does not provide a way for gathering info about gpu memory. should use it as user parameter.
@@ -46,9 +46,9 @@ GLHandler::GLHandler(int64_t gpuMemMB, bool inMemory) : dataHandler(NULL), inmem
     // 10LL was used for ooc experiments to get consistent results
     // 4LL for hybrid join due to some emmory leak when using 8192 fbo res
     this->maxBufferSize = gpuMemMB * 1024LL * 1024LL;
-	#ifdef FULL_SUMMARY_GL
-    	qDebug() << "Max GPU buffer size" << this->maxBufferSize << sizeof(GLsizeiptr);
-	#endif
+#ifdef FULL_SUMMARY_GL
+    qDebug() << "Max GPU buffer size" << this->maxBufferSize << sizeof(GLsizeiptr);
+#endif
     this->maxBufferSize -= 100LL * 1024LL * 1024LL;
     this->initializeGL();
 }
@@ -62,14 +62,14 @@ GLHandler::~GLHandler() {
 }
 
 GLHandler *GLHandler::getInstance(int64_t gpuMemMB, bool inMemory) {
-    if(instance == NULL) {
+    if (instance == NULL) {
         instance = new GLHandler(gpuMemMB, inMemory);
     }
     return instance;
 }
 
-void GLHandler::setDataHandler(DataHandler * dataHandler) {
-	this->dataHandler = dataHandler;
+void GLHandler::setDataHandler(DataHandler *dataHandler) {
+    this->dataHandler = dataHandler;
 }
 
 void GLHandler::setupContext() {
@@ -130,7 +130,7 @@ void GLHandler::initializeGL() {
 
     // from now on use your OpenGL context
     const GLubyte *str = glGetString(GL_VERSION);
-    if(str == 0) {
+    if (str == 0) {
         cout << "error with OpenGL context: " << glGetError() << endl;
     } else {
 #ifdef FULL_SUMMARY_GL
@@ -186,16 +186,16 @@ void GLHandler::initFunctions() {
 }
 
 QVector<int> GLHandler::executeFunction(FunctionType fn) {
-	
-	if (dataHandler == NULL) {
+
+    if (dataHandler == NULL) {
         qDebug() << "DataHandler not set.";
-		return QVector<int>();
-	}
-	
+        return QVector<int>();
+    }
+
     // TODO: need to maintain queue
     // for now simply running it
     this->setupContext();
-    if(this->functions.contains(fn)) {
+    if (this->functions.contains(fn)) {
         return this->functions[fn]->execute();
     } else {
         qDebug() << "Function type" << fn << "not yet supported";
@@ -204,8 +204,8 @@ QVector<int> GLHandler::executeFunction(FunctionType fn) {
 }
 
 QVector<int> GLHandler::getErrorBounds(FunctionType fn) {
-    if(fn == RasterJoinBoundFn) {
-        QSharedPointer<RasterJoinBounds> rjb = this->functions[fn].staticCast<RasterJoinBounds>();
+    if (fn == RasterJoinBoundFn) {
+        QSharedPointer <RasterJoinBounds> rjb = this->functions[fn].staticCast<RasterJoinBounds>();
         return rjb->bounds;
     }
     return QVector<int>();
@@ -213,8 +213,8 @@ QVector<int> GLHandler::getErrorBounds(FunctionType fn) {
 
 QString GLHandler::printTimeStats(FunctionType fn) {
     std::cout << std::endl;
-    QVector<QVector<quint64>> timings;
-    if(this->functions.contains(fn)) {
+    QVector <QVector<quint64>> timings;
+    if (this->functions.contains(fn)) {
         timings << this->functions[fn]->executeTime;
         timings << this->functions[fn]->ptMemTime;
         timings << this->functions[fn]->ptRenderTime;
@@ -225,16 +225,16 @@ QString GLHandler::printTimeStats(FunctionType fn) {
         timings << this->functions[fn]->polyIndexTime;
         timings << this->functions[fn]->backendQueryTime;
 
-        int fnId = (fn == RasterJoinBoundFn)?5:fn;
+        int fnId = (fn == RasterJoinBoundFn) ? 5 : fn;
         QString line = QString::number(this->functions[fn]->ptsSize) + "\t\t"
-                + QString::number(this->functions[fn]->polySize) + "\t"
-                + QString::number(fnId) + "\t"
-                + QString::number(this->functions[fn]->noPtPasses) + "\t"
-                + QString::number(this->functions[fn]->noConstraints);
-        for(int i = 0;i < timings.size();i ++) {
+                       + QString::number(this->functions[fn]->polySize) + "\t"
+                       + QString::number(fnId) + "\t"
+                       + QString::number(this->functions[fn]->noPtPasses) + "\t"
+                       + QString::number(this->functions[fn]->noConstraints);
+        for (int i = 0; i < timings.size(); i++) {
             line += "\t" + QString::number(*std::min_element(timings[i].constBegin(), timings[i].constEnd()));
         }
-        if(fn == RasterJoinFn) {
+        if (fn == RasterJoinFn) {
             line += "\t" + QString::number(accuracy);
         } else {
             line += "\t0";
@@ -247,12 +247,11 @@ QString GLHandler::printTimeStats(FunctionType fn) {
     }
 }
 
-void GLHandler::setAccuracyDistance(double size)
-{
+void GLHandler::setAccuracyDistance(double size, const BoundD &bound) {
     accuracy = size;
-    for(int i = 0;i < FunctionCount;i ++) {
-        if(this->functions.contains(static_cast<FunctionType>(i)))
-        this->functions[static_cast<FunctionType>(i)]->setMaxCellSize(size);
+    for (int i = 0; i < FunctionCount; i++) {
+        if (this->functions.contains(static_cast<FunctionType>(i)))
+            this->functions[static_cast<FunctionType>(i)]->setMaxCellSize(size, bound);
     }
 }
 

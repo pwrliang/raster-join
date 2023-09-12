@@ -10,6 +10,7 @@
 #include <QFile>
 #include <random>
 #include "Utils.h"
+#include "Common.h"
 
 double computeTan(double andgle) {
     return tan(andgle);
@@ -567,21 +568,21 @@ double CalcMedianTime(QVector <quint64> timings) {
     return median;
 }
 
-bool transformPoint(PointF latlon, PointF &transformed, const BoundF &bound) {
-    double minlat = 24.396308;
-    double maxlat = 49.384358;
-    double minlon = -124.848974;
-    double maxlon = -66.885444;
+bool transformPoint(PointF latlon, PointF &transformed, const BoundD &bound) {
+//    double minlat = 24.396308;
+//    double maxlat = 49.384358;
+//    double minlon = -124.848974;
+//    double maxlon = -66.885444;
 
 //    double minlat = -160.236053329;
 //    double maxlat = -64.566162185;
 //    double minlon = 17.674692622;
 //    double maxlon = 49.385619113;
 
-//    auto minlat = bound.minx;
-//    auto maxlat = bound.maxx;
-//    auto minlon = bound.miny;
-//    auto maxlon = bound.maxy;
+    auto minlat = bound.min_lat;
+    auto maxlat = bound.max_lat;
+    auto minlon = bound.min_lon;
+    auto maxlon = bound.max_lon;
 
     if (minlat < -90 || maxlat > 90) {
         printf("Error lat range: %.6f, %.6f\n", minlat, maxlat);
@@ -621,7 +622,7 @@ bool reverseTransformPoint(PointF transformed, PointF &latlon) {
     return true;
 }
 
-bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundF &bound) {
+bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundD &bound) {
     transformed.clear();;
     for (int i = 0; i < poly.size(); i++) {
         PointF t;
@@ -634,7 +635,7 @@ bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundF &bound)
     return true;
 }
 
-inline double getGroundResolution(const BoundD &bound) {
+double getGroundResolutionBound(const BoundD &bound) {
     QPointF center = (QPointF((bound.min_lat + bound.max_lat) / 2, (bound.min_lon + bound.max_lon) / 2));
     return getGroundResolution(center);
 }

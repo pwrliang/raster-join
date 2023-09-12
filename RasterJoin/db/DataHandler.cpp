@@ -22,11 +22,6 @@ DataHandler::~DataHandler() {}
 
 
 void DataHandler::initData(QString polyIndex, QString indexFileStem, set <size_t> attIds, size_t locAtt) {
-
-    /* Init Polygons */
-    polyHandler = new PolyHandler();
-    polyHandler->initFromFile(polyIndex);
-
     /* Init Points */
     QFile config_file(indexFileStem + "_config");
     if (!config_file.open(QIODevice::ReadOnly)) {
@@ -38,8 +33,12 @@ void DataHandler::initData(QString polyIndex, QString indexFileStem, set <size_t
     float lx, ly;
     uint32_t lz;
     int p1, p2, p3;
-    BoundD bound;
-    in >> bound.min_lat >> bound.max_lat >> bound.min_lon >> bound.max_lon >> lx >> ly >> lz >> p1 >> p2 >> p3;
+    in >> origin_bound.min_lat >> origin_bound.max_lat >> origin_bound.min_lon >> origin_bound.max_lon >> lx >> ly >> lz
+       >> p1 >> p2 >> p3;
+
+    printf("Origin Bound from config, lat: %.6f - %.6f, lon: %.6f - %.6f\n", origin_bound.min_lat, origin_bound.max_lat,
+           origin_bound.min_lon, origin_bound.max_lon);
+
     quint8 attrNum, attrType;
 
     in >> attrNum; //number of attributes
@@ -62,6 +61,10 @@ void DataHandler::initData(QString polyIndex, QString indexFileStem, set <size_t
     hashGridIndex->loadIndex(attributes);
 
     this->setAggregation();
+
+    /* Init Polygons */
+    polyHandler = new PolyHandler();
+    polyHandler->initFromFile(polyIndex, origin_bound);
 }
 
 void DataHandler::setQueryConstraints(vector <QueryConstraint> constraints) {

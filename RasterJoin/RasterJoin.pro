@@ -65,6 +65,7 @@ HEADERS += \
     db/Record.hpp \
     db/TaxiRecord.hpp \
     db/TwitterRecord.hpp \
+    db/SimplePointRecord.hpp \
     join/GLData.hpp \
     join/GLFunction.hpp \
     join/GLHandler.hpp \
