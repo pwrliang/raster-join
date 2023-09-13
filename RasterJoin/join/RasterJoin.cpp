@@ -120,13 +120,10 @@ void RasterJoin::renderPoints() {
     pointsShader->setUniformValue("mvpMatrix", mvp);
     pointsShader->setUniformValue("queryCt", noConstraints);
 
-    printf("aggrType: %d queryCt: %d\n", aggr, noConstraints);
-
     glBindVertexArray(this->gvao);
     this->pbuffer->bind();
 
     GLsizeiptr offset = 0;
-    printf("inputData size: %d\n", inputData.size()); // equals number of attributes
     for (int j = 0; j < inputData.size(); j++) {
         pointsShader->setAttributeBuffer(j, GL_FLOAT, offset, attribSizes[j]);
         pointsShader->enableAttributeArray(j);
@@ -143,7 +140,7 @@ void RasterJoin::renderPoints() {
     glEndQuery(GL_TIME_ELAPSED);
     glFinish();
     GLuint64 elapsed_time = getTime(query);
-    this->ptRenderTime.last() += (elapsed_time / 1000000);
+    this->ptRenderTime.last() += elapsed_time;
 #endif
 
     glDisable(GL_BLEND);
@@ -189,8 +186,8 @@ void RasterJoin::renderPolys() {
 #ifdef PROFILE_GL
     glEndQuery(GL_TIME_ELAPSED);
     glFinish();
-    GLuint64 elapsed_time = getTime(query);
-    this->polyRenderTime.last() += (elapsed_time / 1000000);
+    GLuint64 elapsed_time = getTime(query); // nanosecond
+    this->polyRenderTime.last() += elapsed_time;
 #endif
 
     glDisable(GL_BLEND);
