@@ -16,7 +16,7 @@
 using namespace std;
 
 QString databaseName, inputPointsFileName;
-double min_long, max_long, min_lat, max_lat
+double min_long, max_long, min_lat, max_lat;
 DatasetType datasetType = SimplePoint;  //or Twitter
 bool importLocationOnly = true;
 
@@ -67,7 +67,7 @@ void createBackendIndex() {
         bound.max_lon = max_long;
 
         bool valid = bound.min_lat >= -90 && bound.max_lat <= 90;
-        valid &= bound.min_long >= -180 && bound.max_long <=  180;
+        valid &= bound.min_lon >= -180 && bound.max_lon <=  180;
 
         if (!valid) {
             printf("Invalid lat/long bound\n");
@@ -240,23 +240,23 @@ bool parseArguments(const QMap <QString, QString> &args) {
     }
 
     if (keys.contains("--min-long")) {
-        min_long = std::stod(args["--min-long"]);
+        min_long = std::stod(args["--min-long"].toStdString());
     } else {
         return false;
     }
     if (keys.contains("--max-long")) {
-        max_long = std::stod(args["--max-long"]);
+        max_long = std::stod(args["--max-long"].toStdString());
     } else {
         return false;
     }
 
     if (keys.contains("--min-lat")) {
-        min_lat = std::stod(args["--min-lat"]);
+        min_lat = std::stod(args["--min-lat"].toStdString());
     } else {
         return false;
     }
     if (keys.contains("--max-lat")) {
-        max_lat = std::stod(args["--max-lat"]);
+        max_lat = std::stod(args["--max-lat"].toStdString());
     } else {
         return false;
     }

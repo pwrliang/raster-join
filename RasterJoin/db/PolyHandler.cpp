@@ -101,17 +101,18 @@ void PolyHandler::getTriangulation(std::vector<float> &verts, std::vector<float>
         vector <Point> outputTriangles;  // Every 3 points is a triangle
         vector <Point> boundingPolygon;
 
-        inputPolygons.push_back(polys[i]);
-        clip2tri clip2tri;
-        clip2tri.triangulate(inputPolygons, outputTriangles, boundingPolygon);
+        if (polys[i].size() > 3) {
+            inputPolygons.push_back(polys[i]);
+            clip2tri clip2tri;
+            clip2tri.triangulate(inputPolygons, outputTriangles, boundingPolygon);
 
-
-        for (size_t j = 0; j < outputTriangles.size(); j++) {
-            double x = double(outputTriangles[j].x);
-            double y = double(outputTriangles[j].y);
-            tverts[id].push_back(x);
-            tverts[id].push_back(y);
-            tids[id].push_back(i);
+            for (size_t j = 0; j < outputTriangles.size(); j++) {
+                double x = double(outputTriangles[j].x);
+                double y = double(outputTriangles[j].y);
+                tverts[id].push_back(x);
+                tverts[id].push_back(y);
+                tids[id].push_back(i);
+            }
         }
     }
 
@@ -165,6 +166,10 @@ void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPoin
         }
         for (int j = 0; j < np; j++) {
             input >> n;
+            if (n == 0) {
+                printf("Invalid n points %d\n", n);
+                exit(1);
+            }
             for (int k = 0; k < n; k++) {
                 double x, y;
                 input >> x >> y;

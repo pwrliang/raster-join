@@ -74,6 +74,7 @@ std::list<Triangle*> SweepContext::GetMap()
 
 void SweepContext::InitTriangulation()
 {
+  assert(points_.size() > 0);
   double xmax(points_[0]->x), xmin(points_[0]->x);
   double ymax(points_[0]->y), ymin(points_[0]->y);
 
