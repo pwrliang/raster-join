@@ -593,12 +593,19 @@ bool transformPoint(PointF latlon, PointF &transformed, const BoundD &bound) {
         exit(1);
     }
 
+    auto print_filter_out = [=]() {
+        printf("Point %.6f, %.6f, bound: %.6f ~ %.6f, %.6f ~ %.6f\n", latlon.x(), latlon.y(), minlat, maxlat, minlon,
+               maxlon);
+    };
+
 // x -90~90, y -180~180
     if (latlon.x() < minlat || latlon.x() > maxlat) {
+        print_filter_out();
         return false;
     }
 
     if (latlon.y() < minlon || latlon.y() > maxlon) {
+        print_filter_out();
         return false;
     }
 
@@ -623,7 +630,7 @@ bool reverseTransformPoint(PointF transformed, PointF &latlon) {
 }
 
 bool transformPolygon(PolygonF poly, PolygonF &transformed, const BoundD &bound) {
-    transformed.clear();;
+    transformed.clear();
     for (int i = 0; i < poly.size(); i++) {
         PointF t;
         if (transformPoint(poly[i], t, bound)) {

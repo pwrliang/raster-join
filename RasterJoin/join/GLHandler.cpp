@@ -215,8 +215,8 @@ QString GLHandler::printTimeStats(FunctionType fn) {
     std::cout << std::endl;
     QVector <QVector<quint64>> timings;
     if (this->functions.contains(fn)) {
-        this->functions[fn]->ptRenderTime.last() / 1000 / 1000;
-        this->functions[fn]->polyRenderTime.last() / 1000 / 1000;
+        this->functions[fn]->ptRenderTime.last() = this->functions[fn]->ptRenderTime.last() / 1000 / 1000;
+        this->functions[fn]->polyRenderTime.last() = this->functions[fn]->polyRenderTime.last() / 1000 / 1000;
         timings << this->functions[fn]->executeTime;
         timings << this->functions[fn]->ptMemTime;
         timings << this->functions[fn]->ptRenderTime;
@@ -226,6 +226,9 @@ QString GLHandler::printTimeStats(FunctionType fn) {
         timings << this->functions[fn]->triangulationTime;
         timings << this->functions[fn]->polyIndexTime;
         timings << this->functions[fn]->backendQueryTime;
+
+        printf("Point Render Time: %llu ms\n", this->functions[fn]->ptRenderTime.last());
+        printf("Poly Render Time: %llu ms\n", this->functions[fn]->polyRenderTime.last());
 
         // ptsSize polySize fnId noPtPasses noConstraints executeTime ptMemTime ptRenderTime polyMemTime polyRenderTime setupTime triangulationTime polyIndexTime backendQueryTime accuracy
         int fnId = (fn == RasterJoinBoundFn) ? 5 : fn;

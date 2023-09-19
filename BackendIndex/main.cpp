@@ -67,7 +67,7 @@ void createBackendIndex() {
         bound.max_lon = max_long;
 
         bool valid = bound.min_lat >= -90 && bound.max_lat <= 90;
-        valid &= bound.min_lon >= -180 && bound.max_lon <=  180;
+        valid &= bound.min_lon >= -180 && bound.max_lon <= 180;
 
         if (!valid) {
             printf("Invalid lat/long bound\n");
@@ -289,6 +289,8 @@ int main(int argc, char *argv[]) {
         cout << "help message: see code!" << "\n";
         return 1;
     }
+
+    printf("lat: %.6f ~ %.6f, lon: %.6f ~ %.6f\n", min_lat, max_lat, min_long, max_long);
 
     createBackendIndex();
 

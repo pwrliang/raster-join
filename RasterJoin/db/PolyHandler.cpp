@@ -103,16 +103,21 @@ void PolyHandler::getTriangulation(std::vector<float> &verts, std::vector<float>
 
         if (polys[i].size() > 3) {
             inputPolygons.push_back(polys[i]);
-            clip2tri clip2tri;
-            clip2tri.triangulate(inputPolygons, outputTriangles, boundingPolygon);
+            try {
+                clip2tri clip2tri;
+                clip2tri.triangulate(inputPolygons, outputTriangles, boundingPolygon);
 
-            for (size_t j = 0; j < outputTriangles.size(); j++) {
-                double x = double(outputTriangles[j].x);
-                double y = double(outputTriangles[j].y);
-                tverts[id].push_back(x);
-                tverts[id].push_back(y);
-                tids[id].push_back(i);
+                for (size_t j = 0; j < outputTriangles.size(); j++) {
+                    double x = double(outputTriangles[j].x);
+                    double y = double(outputTriangles[j].y);
+                    tverts[id].push_back(x);
+                    tverts[id].push_back(y);
+                    tids[id].push_back(i);
+                }
+            } catch (std::exception& e) {
+                printf("Cannot triangle %d\n", i);
             }
+
         }
     }
 
@@ -161,15 +166,10 @@ void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPoin
         input >> np;
         PolygonF poly;
         PointF prev;
-        if (np != 1) {
-            printf("np: %d\n", np);
-        }
+        assert(np == 1);
         for (int j = 0; j < np; j++) {
             input >> n;
-            if (n == 0) {
-                printf("Invalid n points %d\n", n);
-                exit(1);
-            }
+            assert(n > 0);
             for (int k = 0; k < n; k++) {
                 double x, y;
                 input >> x >> y;
@@ -184,6 +184,10 @@ void PolyHandler::readPolygons(QString polyFile, PolygonCollection &polys, QPoin
                 prev = pt;
             }
         }
+        if (poly.empty()) {
+            printf("Bad Polygon id: %d, n: %d\n", i, n);
+        }
+        bool remove = poly.first() == poly.last();
         if (poly.first() == poly.last()) {
             poly.removeLast();
         }
