@@ -1,5 +1,5 @@
 #include "PolyHandler.hpp"
-
+#include <iostream>
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
@@ -35,7 +35,6 @@ void PolyHandler::initFromFile(QString polyIndex, const BoundD &origin_bound) {
         QString name = list[0];
         QString file = list[1];
         QString dir = QFileInfo(fi).dir().absolutePath();
-
         this->addPolygonCollection(name, dir + "/" + file);
         currentCollection = name;
     }

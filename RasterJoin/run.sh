@@ -11,12 +11,12 @@
 #  --endTime 0 \
 #  --opAggregation aggOut
 
-gdb --args ./RasterJoin --nIter 1 \
+./RasterJoin --nIter 1 \
   --joinType raster \
   --indexRes 1024 \
-  --backendIndexName /local/storage/liang/Downloads/Datasets/rasterjoin_backendindex/parks/Europe/parks \
+  --backendIndexName /local/storage/liang/Downloads/Datasets/rasterjoin_backendindex/parks/North_America/parks \
   --locAttrib 2 \
-  --polygonList /local/storage/liang/Downloads/Datasets/rasterjoin_polygon/lakes/Europe/polygons.txt \
+  --polygonList /local/storage/liang/Downloads/Datasets/rasterjoin_polygon/lakes/North_America/polygons.txt \
   --polygonDataset 1 \
   --startTime 0 \
   --endTime 0 \

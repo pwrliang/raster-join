@@ -20,7 +20,7 @@ function run() {
     echo "Generating $input_poly"
   fi
 
-  if [[ ! -f "$output_prefix/raster_0_100.csv" ]]; then
+  if [[ ! -f "$output_prefix/timing" ]]; then
     ./RasterJoin --nIter 1 \
       --joinType raster \
       --indexRes 1024 \
