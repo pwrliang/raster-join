@@ -136,6 +136,9 @@ void RasterJoin::renderPoints() {
     glDrawArrays(GL_POINTS, 0, tsize);
     glDisableVertexAttribArray(0);
 
+    // Timer queries are the collective name for the query types GL_TIMESTAMP and GL_TIME_ELAPSED.
+    // These are used for measuring the GPU timings of various operations. All times returned are measured in nanoseconds.
+    // https://www.khronos.org/opengl/wiki/Query_Object
 #ifdef PROFILE_GL
     glEndQuery(GL_TIME_ELAPSED);
     glFinish();

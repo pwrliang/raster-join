@@ -215,8 +215,8 @@ QString GLHandler::printTimeStats(FunctionType fn) {
     std::cout << std::endl;
     QVector <QVector<quint64>> timings;
     if (this->functions.contains(fn)) {
-        auto render_pt_micro = this->functions[fn]->ptRenderTime.last() = this->functions[fn]->ptRenderTime.last();
-        auto render_poly_micro = this->functions[fn]->polyRenderTime.last();
+        auto render_pt_nano = this->functions[fn]->ptRenderTime.last();
+        auto render_poly_nano = this->functions[fn]->polyRenderTime.last();
         this->functions[fn]->ptRenderTime.last() = this->functions[fn]->ptRenderTime.last() / 1000 / 1000;
         this->functions[fn]->polyRenderTime.last() = this->functions[fn]->polyRenderTime.last() / 1000 / 1000;
         timings << this->functions[fn]->executeTime;
@@ -229,8 +229,8 @@ QString GLHandler::printTimeStats(FunctionType fn) {
         timings << this->functions[fn]->polyIndexTime;
         timings << this->functions[fn]->backendQueryTime;
 
-        printf("Point Render Time: %.4lf ms\n", render_pt_micro / 1000.0 / 1000.0);
-        printf("Poly Render Time: %.4lf ms\n", render_poly_micro / 1000.0 / 1000.0);
+        printf("Point Render Time: %.4lf ms\n", render_pt_nano / 1000.0 / 1000.0);
+        printf("Poly Render Time: %.4lf ms\n", render_poly_nano / 1000.0 / 1000.0);
 
         // ptsSize polySize fnId noPtPasses noConstraints executeTime ptMemTime ptRenderTime polyMemTime polyRenderTime setupTime triangulationTime polyIndexTime backendQueryTime accuracy
         int fnId = (fn == RasterJoinBoundFn) ? 5 : fn;
